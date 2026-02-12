@@ -1,0 +1,59 @@
+# 晋江热榜自动更新工作流
+name: jjwxc_hot_rank
+
+on:
+  # 1. 定时触发（cron表达式，UTC时间）
+  schedule:
+    # 每天北京时间 08:10 → UTC 00:10
+    - cron: '10 0 * * *'
+    # 每天北京时间 20:10 → UTC 12:10
+    - cron: '10 12 * * *'
+  
+  # 2. 手动触发（你可以在Actions页面点按钮运行）
+  workflow_dispatch:
+
+jobs:
+  build-and-run:
+    # 运行环境：最新版Ubuntu（完全免费）
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 步骤1：检出你的仓库代码
+      - name: 1️⃣ 检出仓库代码
+        uses: actions/checkout@v3
+        with:
+          # ⚠️ 重点：使用你设置的Token来获得推送权限
+          token: ${{ secrets.PUSH_TOKEN }}
+      
+      # 步骤2：设置Python环境
+      - name: 2️⃣ 设置Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      # 步骤3：安装依赖（和你本地环境保持一致）
+      - name: 3️⃣ 安装依赖库
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 lxml
+      
+      # 步骤4：运行你的爬虫脚本
+      - name: 4️⃣ 执行晋江热榜爬虫
+        run: |
+          python jjwxc_hot.py
+      
+      # 步骤5：确认生成了JSON文件（调试用）
+      - name: 5️⃣ 列出生成的文件
+        run: |
+          ls -la *.json || echo "暂无JSON文件"
+          pwd
+      
+      # 步骤6：将更新后的JSON文件提交回仓库
+      - name: 6️⃣ 自动推送更新到仓库
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add *.json
+          git add data/*.json 2>/dev/null || true  # 如果有data文件夹
+          git diff --quiet && git diff --staged --quiet || git commit -m "🔄 自动更新晋江热榜 $(date '+%Y-%m-%d %H:%M')"
+          git push
