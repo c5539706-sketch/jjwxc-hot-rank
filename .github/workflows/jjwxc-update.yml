@@ -2,8 +2,8 @@ name: jjwxc_hot_rank
 
 on:
   schedule:
-    - cron: '10 0 * * *'   # 北京时间 08:10
-    - cron: '10 12 * * *'  # 北京时间 20:10
+    - cron: '10 0 * * *'
+    - cron: '10 12 * * *'
   workflow_dispatch:
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
           ls -la *.json || echo "暂无JSON文件"
           pwd
       
-           - name: 6️⃣ 自动推送更新到仓库
+      - name: 6️⃣ 自动推送更新到仓库
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
